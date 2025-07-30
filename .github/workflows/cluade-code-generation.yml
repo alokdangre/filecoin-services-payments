@@ -43,11 +43,10 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
         with:
-          node-version: '18'
-          cache: 'npm'
+          version: v0.3
 
       - name: Setup Python
         uses: actions/setup-python@v4
@@ -56,7 +55,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          npm install
+          forge install
           pip install boto3 requests botocore
 
       - name: Extract task description
@@ -81,15 +80,22 @@ jobs:
 
       - name: Analyze codebase structure
         run: |
-          find . -type f \( -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" \) \
-            -not -path "./node_modules/*" \
+          find . -type f \( -name "*.sol" -o -name "*.toml" -o -name "Makefile" \) \
+            -not -path "./lib/*" \
             -not -path "./.git/*" > codebase_files.txt
           
           echo "Project structure:" > project_context.txt
-          tree -I 'node_modules|.git' -L 3 >> project_context.txt || ls -la >> project_context.txt
+          tree -I 'lib|.git|out|cache' -L 3 >> project_context.txt || ls -la >> project_context.txt
           
-          echo "Package.json content:" >> project_context.txt
-          cat package.json >> project_context.txt
+          echo "Foundry configuration:" >> project_context.txt
+          if [ -f "foundry.toml" ]; then
+            cat foundry.toml >> project_context.txt
+          fi
+          
+          echo "Makefile content:" >> project_context.txt
+          if [ -f "Makefile" ]; then
+            cat Makefile >> project_context.txt
+          fi
 
       - name: Generate code with Claude
         env:
@@ -139,7 +145,7 @@ jobs:
                   context += read_file_safely('project_context.txt')
               
               # Read key configuration files
-              key_files = ['package.json', 'tsconfig.json', 'vite.config.ts', 'capacitor.config.ts']
+              key_files = ['foundry.toml', 'Makefile', 'README.md']
               for file in key_files:
                   if os.path.exists(file):
                       context += f"\n\n=== {file} ===\n"
@@ -161,7 +167,7 @@ jobs:
               client = get_bedrock_client()
               
               prompt = f"""
-          You are an expert software developer working on an Ionic React TypeScript application for government billing/invoicing.
+          You are an expert Solidity developer working on a Foundry-based smart contract project for payment systems.
           
           TASK: {task_description}
           
@@ -176,13 +182,15 @@ jobs:
           4. **INSTRUCTIONS**: Any additional setup or configuration steps needed
           
           Follow these guidelines:
-          - Use TypeScript and React hooks
-          - Follow Ionic React patterns and components
-          - Maintain consistency with existing code style
-          - Include proper error handling
-          - Add appropriate TypeScript types
-          - Use existing utilities and patterns from the codebase
-          - Ensure mobile-first responsive design
+          - Use Solidity 0.8.30 (as specified in foundry.toml)
+          - Follow established patterns from the existing codebase
+          - Maintain consistency with existing code style and architecture
+          - Include proper error handling with custom errors
+          - Add comprehensive unit tests using Forge test framework
+          - Use OpenZeppelin contracts where appropriate (already available in lib/)
+          - Follow gas optimization best practices
+          - Include proper NatSpec documentation
+          - Ensure security best practices are followed
           
           Format your response clearly with sections for each file change.
           """
