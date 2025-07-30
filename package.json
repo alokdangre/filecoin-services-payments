@@ -1,0 +1,25 @@
+{
+  "name": "filecoin-services-payments",
+  "version": "1.0.0",
+  "description": "FWS Payments Contract - Foundry-based smart contract project",
+  "main": "index.js",
+  "scripts": {
+    "build": "forge build",
+    "test": "forge test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/alokdangre/filecoin-services-payments.git"
+  },
+  "keywords": [
+    "solidity",
+    "foundry",
+    "smart-contracts",
+    "payments",
+    "filecoin"
+  ],
+  "author": "Filecoin Services",
+  "license": "Apache-2.0 OR MIT",
+  "devDependencies": {},
+  "dependencies": {}
+}
