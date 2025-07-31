@@ -1,0 +1,146 @@
+Project structure:
+.
+├── LICENSE.md
+├── Makefile
+├── README.md
+├── SPEC.md
+├── codebase_files.txt
+├── docs
+│   ├── migration-to-foundry-v1.md
+│   └── payments-gas-benchmarks.md
+├── foundry.lock
+├── foundry.toml
+├── package-lock.json
+├── package.json
+├── project_context.txt
+├── src
+│   ├── ERC1967Proxy.sol
+│   ├── Errors.sol
+│   ├── Payments.sol
+│   └── RateChangeQueue.sol
+├── test
+│   ├── AccountLockupSettlement.t.sol
+│   ├── AccountManagement.t.sol
+│   ├── DepositWithPermitAndOperatorApproval.t.sol
+│   ├── ERC1967Proxy.t.sol
+│   ├── FeeOnTransferVulnerability.t.sol
+│   ├── Fees.t.sol
+│   ├── OperatorApproval.t.sol
+│   ├── OperatorApprovalUsageLeak.t.sol
+│   ├── PayeeFaultArbitrationBug.t.sol
+│   ├── PaymentsAccessControl.t.sol
+│   ├── PaymentsEvents.t.sol
+│   ├── RailGetters.t.sol
+│   ├── RailSettlement.t.sol
+│   ├── RateChangeQueue.t.sol
+│   ├── helpers
+│   │   ├── BaseTestHelper.sol
+│   │   ├── PaymentsTestHelpers.sol
+│   │   └── RailSettlementHelpers.sol
+│   └── mocks
+│       ├── MockERC20.sol
+│       ├── MockFeeOnTransferTokenWithPermit.sol
+│       └── MockValidator.sol
+└── tools
+    ├── README.md
+    ├── deploy.sh
+    ├── get-owner.sh
+    ├── transfer-owner.sh
+    └── upgrade-contract.sh
+
+7 directories, 41 files
+Foundry configuration:
+[profile.default]
+src = 'src'
+test = 'test'
+script = 'script'
+out = 'out'
+libs = ['lib']
+cache_path = 'cache'
+solc = "0.8.30"
+via_ir = true
+
+# For dependencies
+remappings = [
+    '@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/',
+    '@openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/',
+    'forge-std/=lib/forge-std/src/',
+]
+Makefile content:
+# Makefile for Payment Contracts
+
+# Default target
+.PHONY: default
+default: build test
+
+# All target including installation
+.PHONY: all
+all: install build test
+
+# Install dependencies
+.PHONY: install
+install:
+	forge install
+
+# Build target
+.PHONY: build
+build:
+	forge build
+
+# Test target
+.PHONY: test
+test:
+	forge test -vv
+
+# Helper: Ensure relevant scripts are executable
+.PHONY: chmod-deploy
+chmod-deploy:
+	chmod +x ./tools/deploy.sh
+
+.PHONY : chmod-upgrade
+chmod-upgrade:
+	chmod +x ./tools/upgrade-contract.sh
+
+.PHONY: chmod-transfer
+chmod-transfer:
+	chmod +x ./tools/transfer-owner.sh
+
+.PHONY: chmod-get-owner
+chmod-get-owner:
+	chmod +x ./tools/get-owner.sh
+
+# Deployment targets
+.PHONY: deploy-calibnet
+deploy-calibnet: chmod-deploy
+	./tools/deploy.sh 314159
+
+.PHONY: deploy-devnet
+deploy-devnet: chmod-deploy
+	./tools/deploy.sh 31415926
+
+.PHONY: deploy-mainnet
+deploy-mainnet: chmod-deploy
+	./tools/deploy.sh 314
+
+# Upgrade targets
+.PHONY: upgrade-calibnet
+upgrade-calibnet: chmod-upgrade
+	./tools/upgrade-contract.sh 314159
+
+.PHONY: upgrade-devnet
+upgrade-devnet: chmod-upgrade
+	./tools/upgrade-contract.sh 31415926
+
+.PHONY: upgrade-mainnet
+upgrade-mainnet: chmod-upgrade
+	./tools/upgrade-contract.sh 314
+
+# Ownership management targets
+.PHONY: transfer-owner
+transfer-owner: chmod-transfer
+	./tools/transfer-owner.sh
+
+.PHONY: get-owner
+get-owner: chmod-get-owner
+	./tools/get-owner.sh
+
